@@ -498,6 +498,34 @@ srs_error_t SrsDtls::get_srtp_key(std::string& recv_key, std::string& send_key)
     return err;
 }
 
+srs_error_t SrsDtls::send(const char* data, const int len)
+{
+    srs_error_t err = srs_success;
+
+    int ret = SSL_write(dtls, data, len);
+
+    // TODO: FIXME: Handle error.
+    // Call SSL_get_error() with the return value ret to find out the reason.
+    // @see https://www.openssl.org/docs/man1.0.2/man3/SSL_write.html
+    if (ret <= 0) {
+        return srs_error_new(ERROR_RTC_DTLS, "SSL_write");
+    }
+
+    uint8_t dtls_send_buffer[4096];
+
+    // TODO: FIXME: Handle error.
+    while (BIO_ctrl_pending(bio_out) > 0) {
+        int dtls_send_bytes = BIO_read(bio_out, dtls_send_buffer, sizeof(dtls_send_buffer));
+        if (dtls_send_bytes && callback) {
+            if ((err = callback->write_dtls_data(dtls_send_buffer, dtls_send_bytes)) != srs_success) {
+                return srs_error_wrap(err, "send dtls packet");
+            }
+        }
+    }
+
+    return err;
+}
+
 SrsSRTP::SrsSRTP()
 {
     recv_ctx_ = NULL;

@@ -38,6 +38,8 @@ state-threads
 state-threads-1.9.1.tar.gz
     Patched ST from https://github.com/ossrs/state-threads
 
+usrsctp: https://github.com/sctplab/usrsctp
+
 links:
     nginx:
         http://nginx.org/
