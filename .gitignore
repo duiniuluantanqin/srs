@@ -30,3 +30,6 @@
 .AppleDouble
 
 .idea
+/.vs/srs_fork/v15
+/trunk/Debug/srs_fork.log
+/trunk/VisualGDBCache/srs_fork-Debug/SourceCache.dat
