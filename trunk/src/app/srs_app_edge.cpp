@@ -462,8 +462,8 @@ srs_error_t SrsEdgeIngester::cycle()
         if ((err = do_cycle()) != srs_success) {
             srs_warn("EdgeIngester: Ignore error, %s", srs_error_desc(err).c_str());
             srs_freep(err);
+            
         }
-
         srs_usleep(SRS_EDGE_INGESTER_CIMS);
     }
     
