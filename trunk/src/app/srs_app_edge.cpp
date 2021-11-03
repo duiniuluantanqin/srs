@@ -446,7 +446,7 @@ string SrsEdgeIngester::get_curr_origin()
 }
 
 // when error, edge ingester sleep for a while and retry.
-#define SRS_EDGE_INGESTER_CIMS (3 * SRS_UTIME_SECONDS)
+#define SRS_EDGE_INGESTER_CIMS (5 * SRS_UTIME_SECONDS)
 
 srs_error_t SrsEdgeIngester::cycle()
 {
@@ -916,6 +916,9 @@ srs_error_t SrsPlayEdge::on_client_play()
     if (state == SrsEdgeStateInit) {
         state = SrsEdgeStatePlay;
         err = ingester->start();
+    }
+    else if (state == SrsEdgeStateIngestStopping) {
+        return srs_error_new(ERROR_RTMP_EDGE_PLAY_STATE, "state is stopping");
     }
     
     return err;
