@@ -1,0 +1,19 @@
+[Unit]
+Description=srs - a simple, high efficiency and realtime video server
+Documentation=man:srs-server(8)
+After=network-online.target remote-fs.target nss-lookup.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+WorkingDirectory=/var/lib/srs-server
+PIDFile=/run/srs-server.pid
+ExecStartPre=/usr/bin/srs-server -c /etc/srs-server/srs-server.conf -t
+ExecStart=/usr/bin/srs-server -c /etc/srs-server/srs-server.conf
+ExecReload=/bin/kill -s HUP $MAINPID
+ExecStop=/bin/kill -s TERM $MAINPID
+Restart=on-failure
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target

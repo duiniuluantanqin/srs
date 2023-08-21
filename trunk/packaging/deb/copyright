@@ -1,0 +1,289 @@
+Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
+Upstream-Name: srs
+Upstream-Contact: chenhaibo <nmgchenhaibo@foxmail.com>
+Source: https://github.com/ossrs/srs
+Files-Excluded:
+  trunk/3rdparty/ffmpeg-4-fit/
+  trunk/3rdparty/libsrtp-2-fit/
+  trunk/3rdparty/openssl-1.1-fit/
+  trunk/3rdparty/srt-1-fit/
+  trunk/3rdparty/openssl-OpenSSL_1_0_2u.tar.gz
+  trunk/3rdparty/opus-1.3.1.tar.gz
+  trunk/3rdparty/gperftools-2-fit/
+  trunk/3rdparty/gprof/
+  trunk/3rdparty/gtest-fit/
+  trunk/3rdparty/srs-bench/
+  trunk/3rdparty/signaling/
+  trunk/3rdparty/httpx-static/
+  trunk/doc/source.200kbps.768x320.flv
+  trunk/research/players/js/AdobeFlashPlayerInstall.swf
+Comment: The following files were removed because
+  1-6: use system library instead
+  7-14: for debug only
+
+Files: *
+Copyright: 2013-2023 The SRS Authors
+  Winlin <winlin@vip.126.com>
+  ZhaoWenjie <zhaowenjie@tal.com>
+  ShiWei <shiwei05@kuaishou.com>
+  XiaoZhihong <hondaxiao@tencent.com>
+  WuPengqiang <pengqiang.wpq@alibaba-inc.com>
+  XiaLixin <xialixin@kanzhun.com>
+  LiPeng <mozhan.lp@alibaba-inc.com>
+  ChenGuanghua <jinxue.cgh@alibaba-inc.com>
+  ChenHaibo <nmgchenhaibo@foxmail.com>
+  Johzzy <hellojinqiang@gmail.com>
+  Zhouxiaojun2008 <279686030@qq.com>
+  Pengfei.ma <pengfei.ma.chn@outlook.com>
+  ZhangJunqin <zhangjunqin@jd.com>
+  Winlin <winlin@vip.126.com>
+  Winlin <winterserver@126.com>
+  Winlin <chengli.ycl@alibaba-inc.com>
+  ZhaoWenjie <zhaowenjie@tal.com>
+  ZhaoWenjie <740936897@qq.com>
+  ZhaoWenjie <wenjie.zhao@chinacache.com>
+  xiangcheng.liu <liuxc0116@foxmail.com>
+  naijia.liu <youngcow@youngcow.net>
+  alcoholyi <alcoholyi@qq.com>
+  byteman <wangchen2011@gmail.com>
+  chad.wang <chad.wang.cn@gmail.com>
+  suhetao <suhetao@gmail.com>
+  Johnny <fengjihu@163.com>
+  karthikeyan <keyanmca@gmail.com>
+  StevenLiu <lq@chinaffmpeg.org>
+  StevenLiu <lingjiujianke@gmail.com>
+  StevenLiu <liuqi05@kuaishou.com>
+  zhengfl <zhengfl_1989@126.com>
+  tufang14 <breadbean1449@gmail.com>
+  allspace <allspace@gmail.com>
+  niesongsong <nie950@gmail.com>
+  rudeb0t <nimrod@themanxgroup.tw>
+  CallMeNP <np.liamg@gmail.com>
+  synote <synote@qq.com>
+  lovecat <littlefawn@163.com>
+  panda1986 <542638787@qq.com>
+  YueHonghui <hongf.yue@hotmail.com>
+  ThomasDreibholz <dreibh@simula.no>
+  JuntaoLiu <juntliu@gmail.com>
+  RocFang <fangpeng1986@gmail.com>
+  MakarovYaroslav <yaroslav.makarov.97@mail.ru>
+  MirkoVelic <mvelic@inoxx.net>
+  HuiZhang(huzhang2) <huzhang2@cisco.com>
+  OtterWa <simpleotter23@gmail.com>
+  walkermi <172192667@qq.com>
+  haofz <fuzhuang.hao@vhall.com>
+  ME_Kun_Han <hanvskun@hotmail.com>
+  ljx0305 <ljx0305@gmail.com>
+  cenxinwei <censhanhe@163.com>
+  StarBrilliant <m13253@hotmail.com>
+  xubin <xubin@chnvideo.com>
+  intliang <yintiliang@gmail.com>
+  flowerwrong <sysuyangkang@gmail.com>
+  YLX <568414379@qq.com>
+  J <guotaojiang@qq.com>
+  Harlan <hailiang@gvrcraft.com>
+  hankun <hankun@bravovcloud.com>
+  JonathanBarratt <jonathan.barratt@gmail.com>
+  KeeganH <keeganwharris@gmail.com>
+  liuxc0116 <liuxc0116@gmail.com>
+  ChengdongZhang <lmajzcd@sina.com>
+  lovacat <lovecat@china.sina.com>
+  qiang.li <qiang.li@verycdn.com.cn>
+  HungMingWu <u9089000@gmail.com>
+  Himer <xishizhaohua@qq.com>
+  XiaLixin <xialixin@kanzhun.com>
+  XiaLixin <68469352@qq.com>
+  XiaLixin <xlx0625@163.com>
+  XiaLixin <xialx@yuntongxun.com>
+  alphonsetai <tyh_123@163.com>
+  Michael.Ma <wnpllr@gmail.com>
+  lam2003 <linmin3@yy.com>
+  ShiWei <shiwei05@kuaishou.com>
+  ShiWei <shi.weibd@hotmail.com>
+  XiaofengWang <wasphin@gmail.com>
+  XiaoZhihong <hondaxiao@tencent.com>
+  XiaoZhihong <xiaozhihong8@gmail.com>
+  XiaoZhihong <xiaozhihong@huya.com>
+  yanghuiwen <cainiaodj@qq.com>
+  WuPengqiang <309554135@qq.com>
+  WuPengqiang <pengqiang.wpq@alibaba-inc.com>
+  l <22312935+lam2003@users.noreply.github.com>
+  xfalcon <x-falcon@users.noreply.github.com>
+  ChenGuanghua <jinxue.cgh@alibaba-inc.com>
+  ChenGuanghua <chengh_math@126.com>
+  LiPeng <mozhan.lp@alibaba-inc.com>
+  LiPeng <lipeng19811218@gmail.com>
+  yajun18 <yajun18@staff.sina.com.cn>
+  liulichuan <liulichuan@kuaishou.com>
+  yapingcat <caoyapingneu@163.com>
+  chenchengbin <chenchengbin@yy.com>
+  ChenHaibo <495810242@qq.com>
+  ChenHaibo <nmgchenhaibo@foxmail.com>
+  jasongwq <jasongwq@gmail.com>
+  yinjiaoyuan <yinjiaoyuan@163.com>
+  PieerePi <pihuibin@hotmail.com>
+  JesseXi <jesse.jinjin@wo.cn>
+  PieerePi <40780488+PieerePi@users.noreply.github.com>
+  ghostsf <ghost_sf@163.com>
+  xbpeng121 <53243357+xbpeng121@users.noreply.github.com>
+  Johzzy <hellojinqiang@gmail.com>
+  stone <bluestn@163.com>
+  cfw11 <34058899+cfw11@users.noreply.github.com>
+  Hung-YiChen <gaod.chen@gmail.com>
+  long <liyalong12345@126.com>
+  matthew1838 <77285055+matthew1838@users.noreply.github.com>
+  rise <rise.worlds@outlook.com>
+  pyw <PYW1@users.noreply.github.com>
+  MatheusMacabu <macabu@users.noreply.github.com>
+  Alex.CR <xiaoq_bj@126.com>
+  Zhouxiaojun2008 <279686030@qq.com>
+  Zhouxiaojun2008  <31402829+zhouxiaojun2008@users.noreply.github.com>
+  Pengfei.ma <pengfei.ma.chn@outlook.com>
+  Pengfei.ma <52305649+mapengfei53@users.noreply.github.com>
+  ZhangJunqin <zhangjunqin@jd.com>
+  ZhangJunqin <chundonglinlin@126.com>
+  AbrarAhmed <13979201+abrar71@users.noreply.github.com>
+  BoringWednesday <2651933495@qq.com>
+  liuxiaoliang <37902979+liuxiaoliang8@users.noreply.github.com>
+  qingfuliao <45161976+qingfuliao@users.noreply.github.com>
+  along <alongL@users.noreply.github.com>
+  akanchi <chenpx718@gmail.com>
+  HuachaoMao <huachaomao@gmail.com>
+  James <jiankai.wang@opensight.cn>
+  lvndry <monga.4landry@gmail.com>
+  马文武 <mwenwu@kitegogo.com>
+  PurpleGrape <purplegrape4@gmail.com>
+  xmedia-systems <xmedia.systems@gmail.com>
+  MatinZadehDolatabad <zadehdolatabad@gmail.com>
+  zozobreakzou <zozobreak@163.com>
+  mingo-wu <57790355+mingo-wu1@users.noreply.github.com>
+  CommanderRoot <CommanderRoot@users.noreply.github.com>
+  dev-clavis <declavis.company@gmail.com>
+  everything411 <everything411@163.com>
+  faicker <faicker.mo@gmail.com>
+  Matthew <matthewgao@gmail.com>
+License: MIT
+
+Files: src/protocol/srs_protocol_http_stack.hpp
+Copyright: Ryan Dahl <ry@tinyclouds.org>
+  The SRS Authors
+License: MIT
+
+Files: src/protocol/srs_protocol_http_stack.cpp
+Copyright: Ryan Dahl <ry@tinyclouds.org>
+  The SRS Authors
+License: MIT
+
+Files: src/protocol/srs_protocol_json.hpp
+Copyright: James McLaughlin
+  The SRS Authors
+License: BSD-2-Clause
+
+Files: src/protocol/srs_protocol_json.cpp
+Copyright: James McLaughlin
+  The SRS Authors
+License: BSD-2-Clause
+
+Files: src/app/srs_app_uuid.hpp
+Copyright: Ralph Boehme
+  The SRS Authors
+License: BSD-3-Clause
+
+Files: src/app/srs_app_uuid.cpp
+Copyright: Ralph Boehme
+  The SRS Authors
+License: BSD-3-Clause
+
+Files: 3rdparty/st-srs/*
+Copyright: Silicon Graphics, Inc.
+  The SRS Authors
+License: GPL-2+
+
+License: MIT
+ Permission is hereby granted, free of charge, to any person obtaining a copy of
+ this software and associated documentation files (the "Software"), to deal in
+ the Software without restriction, including without limitation the rights to
+ use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of
+ the Software, and to permit persons to whom the Software is furnished to do so,
+ subject to the following conditions:
+ .
+ The above copyright notice and this permission notice shall be included in all
+ copies or substantial portions of the Software.
+ .
+ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+ FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+ COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+ IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+License: GPL-2+
+ This program is free software; you can redistribute it
+ and/or modify it under the terms of the GNU General Public
+ License as published by the Free Software Foundation; either
+ version 2 of the License, or (at your option) any later
+ version.
+ .
+ This program is distributed in the hope that it will be
+ useful, but WITHOUT ANY WARRANTY; without even the implied
+ warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+ PURPOSE.  See the GNU General Public License for more
+ details.
+ .
+ You should have received a copy of the GNU General Public
+ License along with this package; if not, write to the Free
+ Software Foundation, Inc., 51 Franklin St, Fifth Floor,
+ Boston, MA  02110-1301 USA
+ .
+ On Debian systems, the full text of the GNU General Public
+ License version 2 can be found in the file
+ `/usr/share/common-licenses/GPL-2'.
+
+License: BSD-2-Clause
+ Redistribution and use in source and binary forms, with or without
+ modification, are permitted provided that the following conditions
+ are met:
+ 1. Redistributions of source code must retain the above copyright
+    notice, this list of conditions and the following disclaimer.
+ 2. Redistributions in binary form must reproduce the above copyright
+    notice, this list of conditions and the following disclaimer in the
+    documentation and/or other materials provided with the distribution.
+ .
+ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS `AS IS'
+ AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ ARE DISCLAIMED.  IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE
+ LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ POSSIBILITY OF SUCH DAMAGE.
+
+License: BSD-3-Clause
+ Redistribution and use in source and binary forms, with or without
+ modification, are permitted provided that the following conditions
+ are met:
+ 1. Redistributions of source code must retain the above copyright
+    notice, and the entire permission notice in its entirety,
+    including the disclaimer of warranties.
+ 2. Redistributions in binary form must reproduce the above copyright
+    notice, this list of conditions and the following disclaimer in the
+    documentation and/or other materials provided with the distribution.
+ 3. The name of the author may not be used to endorse or promote
+    products derived from this software without specific prior
+    written permission.
+ .
+ THIS SOFTWARE IS PROVIDED ``AS IS'' AND ANY EXPRESS OR IMPLIED
+ WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+ OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE, ALL OF
+ WHICH ARE HEREBY DISCLAIMED.  IN NO EVENT SHALL THE AUTHOR BE
+ LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT
+ OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR
+ BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+ LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
+ USE OF THIS SOFTWARE, EVEN IF NOT ADVISED OF THE POSSIBILITY OF SUCH
+ DAMAGE.

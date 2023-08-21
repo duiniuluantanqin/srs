@@ -1,0 +1,19 @@
+Source: srs-server
+Section: video
+Priority: optional
+Maintainer: Debian Multimedia Maintainers <debian-multimedia@lists.debian.org>
+Uploaders: chenhaibo <nmgchenhaibo@foxmail.com>
+Build-Depends: debhelper-compat (= 13),cmake,unzip,tcl,pkg-config,libssl-dev,libavcodec-dev,libswresample-dev,libavutil-dev,libopus-dev,libsrt-openssl-dev,libsrtp2-dev
+Standards-Version: 4.6.2
+Homepage: https://ossrs.io
+Vcs-Git: https://salsa.debian.org/srs-team/srs-server.git
+Vcs-Browser: https://salsa.debian.org/srs-team/srs-server
+Rules-Requires-Root: no
+
+Package: srs-server
+Architecture: any
+Depends: ${misc:Depends}, ${shlibs:Depends},openssl,libavcodec59,libswresample4,libavutil57,libopus0,libsrt1.5-openssl,libsrtp2-1,libjs-bootstrap,libjs-jquery
+Pre-Depends: init-system-helpers (>= 1.54~)
+Description: simple, high-efficiency, real-time video server
+ SRS is a simple, high-efficiency, real-time video server,
+ supporting RTMP, WebRTC, HLS, HTTP-FLV, SRT, MPEG-DASH, and GB28181.

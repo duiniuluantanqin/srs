@@ -1,0 +1,56 @@
+#!/usr/bin/make -f
+export DH_VERBOSE=1
+
+# enable all hardening options (see #763372)
+# export DEB_BUILD_MAINT_OPTIONS = hardening=+all
+# DPKG_EXPORT_BUILDFLAGS = 1
+# include /usr/share/dpkg/default.mk
+
+%:
+	dh $@
+INSTALL_DIR := debian/build-bin
+DEBIAN_TMP := debian/tmp
+
+override_dh_auto_configure:
+	./configure --prefix=$(INSTALL_DIR) \
+				--config=/etc/srs-server/srs-server.conf \
+				--sys-ssl=on \
+				--sys-ffmpeg=on \
+				--sys-srtp=on \
+				--sys-srt=on \
+				--extra-flags="-O2 -D_FORTIFY_SOURCE=2" \
+				--extra-ldflags=-Wl,-z,now
+
+override_dh_auto_install:
+	make install
+	# copy binary
+	mv $(INSTALL_DIR)/objs/srs $(INSTALL_DIR)/objs/srs-server
+	mkdir -p $(DEBIAN_TMP)/usr/bin
+	cp $(INSTALL_DIR)/objs/srs-server $(DEBIAN_TMP)/usr/bin/
+	
+	# copy conf
+	mkdir -p $(DEBIAN_TMP)/etc/srs-server
+	cp $(INSTALL_DIR)/conf/full.conf $(DEBIAN_TMP)/etc/srs-server/
+	cp debian/conf/srs-server.conf  $(DEBIAN_TMP)/etc/srs-server/
+	
+	# copy html
+	mkdir -p $(DEBIAN_TMP)/usr/share/srs-server/examples
+	cp -r $(INSTALL_DIR)/objs/nginx/html/console $(DEBIAN_TMP)/usr/share/srs-server/examples
+	cp -r $(INSTALL_DIR)/objs/nginx/html/players $(DEBIAN_TMP)/usr/share/srs-server/examples
+	cp -r $(INSTALL_DIR)/objs/nginx/html/index.html $(DEBIAN_TMP)/usr/share/srs-server/examples
+	cp -r $(INSTALL_DIR)/objs/nginx/html/favicon.ico $(DEBIAN_TMP)/usr/share/srs-server/examples
+	rm -rf $(DEBIAN_TMP)/usr/share/srs-server/examples/players/js/jquery-1.12.2.min.js
+	rm -rf $(DEBIAN_TMP)/usr/share/srs-server/examples/players/js/bootstrap.min.js
+	rm -rf $(DEBIAN_TMP)/usr/share/srs-server/examples/console/js/3rdparty/bootstrap.js
+	rm -rf $(DEBIAN_TMP)/usr/share/srs-server/examples/console/js/3rdparty/bootstrap.min.js
+	rm -rf $(DEBIAN_TMP)/usr/share/doc/srs-server/examples/players/css/bootstrap.min.css
+	rm -rf $(DEBIAN_TMP)/usr/share/doc/srs-server/examples/console/js/3rdparty/bootstrap.min.css
+	
+	# copy man
+	mkdir -p $(DEBIAN_TMP)/usr/share/man/man8
+	cp doc/man/srs-server.8 $(DEBIAN_TMP)/usr/share/man/man8/
+override_dh_auto_clean:
+
+
+override_dh_shlibdeps:
+	dh_shlibdeps -l/debian/srs-server/usr/bin/

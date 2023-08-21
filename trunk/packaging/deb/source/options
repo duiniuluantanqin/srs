@@ -1,0 +1,3 @@
+extend-diff-ignore = "^[^/]*3rdparty/srt-1-fit/srtcore/srt_shared\\.rc$"
+extend-diff-ignore = ".*\\.flv$"
+extend-diff-ignore = ".*\\.swf$"

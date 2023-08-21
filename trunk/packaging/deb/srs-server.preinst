@@ -1,0 +1,26 @@
+#!/bin/sh
+set -e
+
+case "$1" in
+  install)
+    # If we are doing a fresh install, then these files are no longer needed.
+    # They were around for a very short time and are best simply removed.
+    rm -f /etc/logrotate.d/srs-server
+    ;;
+
+  upgrade)
+    rm -f /etc/logrotate.d/srs-server
+    ;;
+
+  abort-upgrade)
+    ;;
+
+  *)
+    echo "preinst called with unknown argument \`$1'" >&2
+    exit 1
+    ;;
+esac
+
+#DEBHELPER#
+
+exit 0
