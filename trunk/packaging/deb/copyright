@@ -13,7 +13,6 @@ Files-Excluded:
   trunk/3rdparty/gprof
   trunk/3rdparty/gtest-fit
   trunk/3rdparty/srs-bench
-  trunk/3rdparty/signaling
   trunk/3rdparty/httpx-static
   trunk/doc/source.200kbps.768x320.flv
   trunk/research/players/js/AdobeFlashPlayerInstall.swf
