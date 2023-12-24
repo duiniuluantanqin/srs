@@ -1,5 +1,5 @@
-PACKAGE="$1"
-VERSION="$2"
+PACKAGE="srs-server"
+VERSION="$1"
 
 # We can only build Debian packages, if the Debian build tools are installed
 if [ \! -x /usr/bin/debuild ]; then
@@ -26,7 +26,7 @@ rm -rf tmp
 mkdir -p tmp/trunk
 cd tmp
 
-ln -s ../"${PACKAGE}_${VERSION}.tar.gz" "${PACKAGE}_${VERSION}+ds.orig.tar.gz"
+ln -s ../"${PACKAGE}_${VERSION}.tar.gz" "${PACKAGE}_${VERSION}+dfsg.1.orig.tar.gz"
 tar -xzvf "../${PACKAGE}_${VERSION}.tar.gz" -C trunk
 cd trunk
 
@@ -34,7 +34,7 @@ cd trunk
 cp -a "packaging/deb" "debian"
 
 # Now, we can call Debian's standard build tool
-debuild -uc -us -tc
+debuild
 
 echo
 echo "The Debian package build finished."

@@ -3,18 +3,18 @@ Upstream-Name: srs
 Upstream-Contact: chenhaibo <nmgchenhaibo@foxmail.com>
 Source: https://github.com/ossrs/srs
 Files-Excluded:
-  trunk/3rdparty/ffmpeg-4-fit/
-  trunk/3rdparty/libsrtp-2-fit/
-  trunk/3rdparty/openssl-1.1-fit/
-  trunk/3rdparty/srt-1-fit/
+  trunk/3rdparty/ffmpeg-4-fit
+  trunk/3rdparty/libsrtp-2-fit
+  trunk/3rdparty/openssl-1.1-fit
+  trunk/3rdparty/srt-1-fit
   trunk/3rdparty/openssl-OpenSSL_1_0_2u.tar.gz
   trunk/3rdparty/opus-1.3.1.tar.gz
-  trunk/3rdparty/gperftools-2-fit/
-  trunk/3rdparty/gprof/
-  trunk/3rdparty/gtest-fit/
-  trunk/3rdparty/srs-bench/
-  trunk/3rdparty/signaling/
-  trunk/3rdparty/httpx-static/
+  trunk/3rdparty/gperftools-2-fit
+  trunk/3rdparty/gprof
+  trunk/3rdparty/gtest-fit
+  trunk/3rdparty/srs-bench
+  trunk/3rdparty/signaling
+  trunk/3rdparty/httpx-static
   trunk/doc/source.200kbps.768x320.flv
   trunk/research/players/js/AdobeFlashPlayerInstall.swf
 Comment: The following files were removed because

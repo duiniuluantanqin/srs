@@ -1,9 +1,7 @@
 version=4
 opts=\
-repacksuffix=+ds,\
-repack,compression=xz,\
+repacksuffix=+dfsg.1,\
+repack,compression=gz,\
 dversionmangle=auto,\
 filenamemangle=s/v(\d+\.\d+)-b(\d+)\.tar\.gz/srs-server-$1.$2.tar.gz/ \
- https://github.com/ossrs/srs/tags .*/archive/.*/v([5\.\d]+-b\d+).tar.gz
-
-
+ https://github.com/ossrs/srs/tags .*/archive/.*/v(5\.\d+)-b(\d+)\.tar\.gz debian uupdate
