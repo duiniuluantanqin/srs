@@ -17,17 +17,26 @@ fi
 # make tar.gz
 rm -rf tmp
 rm -f "${PACKAGE}_${VERSION}.tar.gz"
-tar -czvf "${PACKAGE}_${VERSION}.tar.gz" *
-
 
 # trap 'rm -rf '`pwd`/tmp'; exit $?' EXIT SIGHUP SIGINT SIGTERM
-
-rm -rf tmp
 mkdir -p tmp/trunk
-cd tmp
+cp -a ./* tmp/trunk/
+# find tmp/trunk/3rdparty -type d \( -name st-srs -o -name signaling \) -prune -o -exec rm -rf {} +
+rm -r tmp/trunk/3rdparty/ffmpeg-4-fit
+rm -r tmp/trunk/3rdparty/gperftool-2-fit
+rm -r tmp/trunk/3rdparty/gprof
+rm -r tmp/trunk/3rdparty/gtest-fit
+rm -r tmp/trunk/3rdparty/httpx-static
+rm -r tmp/trunk/3rdparty/libsrtp-2-fit
+rm -r tmp/trunk/3rdparty/openssl-1.1-fit
+rm -r tmp/trunk/3rdparty/patches
+rm -r tmp/trunk/3rdparty/srs-bench
+rm -r tmp/trunk/3rdparty/srt-1-fit
+rm -r tmp/trunk/3rdparty/openssl-OpenSSL_1_0_2u.tar.gz
+rm -r tmp/trunk/3rdparty/opus-1.3.1.tar.gz
 
-ln -s ../"${PACKAGE}_${VERSION}.tar.gz" "${PACKAGE}_${VERSION}+dfsg.1.orig.tar.gz"
-tar -xzvf "../${PACKAGE}_${VERSION}.tar.gz" -C trunk
+cd tmp
+tar -czvf "${PACKAGE}_${VERSION}+dfsg.1.orig.tar.gz" *
 cd trunk
 
 # Debian has very specific requirements about the naming of build directories
