@@ -116,8 +116,15 @@ func Run(ctx context.Context, r0 interface{}) (err error) {
 		return errors.Wrapf(err, "register %v", conf.sipConfig)
 	}
 
-	if err := session.Invite(ctx); err != nil {
-		return errors.Wrapf(err, "invite %v", conf.sipConfig)
+	if err := session.HandleRequests(ctx); err != nil {
+		return errors.Wrapf(err, "handle requests %v", conf.sipConfig)
+	}
+
+	for ctx.Err() == nil {
+		if session.out.ssrc != 0 && session.out.mediaPort != 0 {
+			break
+		}
+		time.Sleep(300 * time.Millisecond)
 	}
 
 	if conf.psConfig.video == "" || conf.psConfig.audio == "" {

@@ -18,6 +18,7 @@ require (
 	github.com/pkg/errors v0.9.1
 	github.com/yapingcat/gomedia/codec v0.0.0-20220617074658-94762898dc25
 	github.com/yapingcat/gomedia/mpeg2 v0.0.0-20220617074658-94762898dc25
+	golang.org/x/net v0.21.0
 )
 
 require (
@@ -46,8 +47,8 @@ require (
 	github.com/tevino/abool v0.0.0-20170917061928-9b9efcf221b5 // indirect
 	github.com/x-cray/logrus-prefixed-formatter v0.5.2 // indirect
 	golang.org/x/crypto v0.21.0 // indirect
-	golang.org/x/net v0.21.0 // indirect
 	golang.org/x/sys v0.18.0 // indirect
 	golang.org/x/term v0.18.0 // indirect
+	golang.org/x/text v0.14.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )

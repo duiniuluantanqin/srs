@@ -23,16 +23,17 @@ package gb28181
 import (
 	"context"
 	"fmt"
-	"github.com/ghettovoice/gosip/log"
-	"github.com/ghettovoice/gosip/sip"
-	"github.com/ghettovoice/gosip/transport"
-	"github.com/ossrs/go-oryx-lib/errors"
-	"github.com/ossrs/go-oryx-lib/logger"
 	"math/rand"
 	"net/url"
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/ghettovoice/gosip/log"
+	"github.com/ghettovoice/gosip/sip"
+	"github.com/ghettovoice/gosip/transport"
+	"github.com/ossrs/go-oryx-lib/errors"
+	"github.com/ossrs/go-oryx-lib/logger"
 )
 
 type SIPConfig struct {
@@ -472,6 +473,20 @@ func (v *SIPSession) Wait(ctx context.Context, method sip.RequestMethod) (sip.Me
 			}
 		}
 	}
+}
+
+func (v *SIPSession) WaitRequest(ctx context.Context) (sip.Message, error) {
+	select {
+	case <-ctx.Done():
+		return nil, ctx.Err()
+	case req := <-v.requests:
+		return req, nil
+	}
+}
+
+// Send sends a SIP message through the client
+func (v *SIPSession) Send(msg sip.Message) error {
+	return v.client.Send(msg)
 }
 
 type SIPClient struct {
