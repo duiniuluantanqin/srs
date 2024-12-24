@@ -24,12 +24,13 @@ import (
 	"context"
 	"flag"
 	"fmt"
-	"github.com/ossrs/go-oryx-lib/errors"
-	"github.com/ossrs/go-oryx-lib/logger"
 	"io"
 	"os"
 	"strings"
 	"time"
+
+	"github.com/ossrs/go-oryx-lib/errors"
+	"github.com/ossrs/go-oryx-lib/logger"
 )
 
 type gbMainConfig struct {
@@ -116,8 +117,29 @@ func Run(ctx context.Context, r0 interface{}) (err error) {
 		return errors.Wrapf(err, "register %v", conf.sipConfig)
 	}
 
-	if err := session.Invite(ctx); err != nil {
-		return errors.Wrapf(err, "invite %v", conf.sipConfig)
+	// Start a goroutine to wait for Invite request
+	inviteChan := make(chan error, 1)
+	go func() {
+		for {
+			select {
+			case <-ctx.Done():
+				inviteChan <- ctx.Err()
+				return
+			default:
+				if err := session.WaitInvite(ctx); err != nil {
+					inviteChan <- err
+					return
+				}
+				// If successfully received Invite, exit loop
+				inviteChan <- nil
+				return
+			}
+		}
+	}()
+
+	// Wait for Invite request processing result
+	if err := <-inviteChan; err != nil {
+		return errors.Wrapf(err, "wait invite %v", conf.sipConfig)
 	}
 
 	if conf.psConfig.video == "" || conf.psConfig.audio == "" {

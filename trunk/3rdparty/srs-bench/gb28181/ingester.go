@@ -22,11 +22,6 @@ package gb28181
 
 import (
 	"context"
-	"github.com/ghettovoice/gosip/sip"
-	"github.com/ossrs/go-oryx-lib/errors"
-	"github.com/ossrs/go-oryx-lib/logger"
-	"github.com/pion/webrtc/v3/pkg/media/h264reader"
-	"github.com/yapingcat/gomedia/mpeg2"
 	"io"
 	"os"
 	"path"
@@ -34,6 +29,12 @@ import (
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/ghettovoice/gosip/sip"
+	"github.com/ossrs/go-oryx-lib/errors"
+	"github.com/ossrs/go-oryx-lib/logger"
+	"github.com/pion/webrtc/v3/pkg/media/h264reader"
+	"github.com/yapingcat/gomedia/mpeg2"
 )
 
 type GBSessionConfig struct {
@@ -247,6 +248,18 @@ func (v *GBSession) UnRegister(ctx context.Context) error {
 	}
 
 	return ctx.Err()
+}
+
+func (v *GBSession) WaitInvite(ctx context.Context) error {
+	select {
+	case <-ctx.Done():
+		return ctx.Err()
+	default:
+		if err := v.Invite(ctx); err != nil {
+			return errors.Wrapf(err, "handle invite request")
+		}
+		return nil
+	}
 }
 
 type IngesterConfig struct {
