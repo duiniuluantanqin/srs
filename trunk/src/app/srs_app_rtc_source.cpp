@@ -1105,6 +1105,10 @@ srs_error_t SrsRtcRtpBuilder::on_video(SrsSharedPtrMessage* msg)
     if (has_idr) {
         SrsUniquePtr<SrsRtpPacket> pkt(new SrsRtpPacket());
 
+        if ((err = bridge_->update_codec(format->vcodec->id)) != srs_success) {
+            return srs_error_wrap(err, "update codec");
+        }
+
         if ((err = package_stap_a(msg, pkt.get())) != srs_success) {
             return srs_error_wrap(err, "package stap-a");
         }
@@ -1310,6 +1314,16 @@ srs_error_t SrsRtcRtpBuilder::package_nalus(SrsSharedPtrMessage* msg, const vect
         pkt->set_payload(raw_raw, SrsRtspPacketPayloadTypeNALU);
         pkt->wrap(msg);
     } else {
+        SrsFormat* format = meta->vsh_format();
+        if (!format || !format->vcodec) {
+            return err;
+        }
+
+        bool is_hevc = format->vcodec->id == SrsVideoCodecIdHEVC;
+        // H264 FU-A header size is 1 @see: https://datatracker.ietf.org/doc/html/rfc6184#section-5.8
+        // H265 FU-A header size is 2 @see: https://datatracker.ietf.org/doc/html/rfc7798#section-4.4.3
+        int header_size = is_hevc ? 2 : 1;
+
         // We must free it, should never use RTP packets to free it,
         // because more than one RTP packet will refer to it.
         SrsUniquePtr<SrsRtpRawNALUs> raw(raw_raw);
@@ -1444,15 +1458,10 @@ srs_error_t SrsRtcRtpBuilder::package_fu_a(SrsSharedPtrMessage* msg, SrsSample* 
             pkt->set_payload(fua, SrsRtspPacketPayloadTypeFUA2);
 
             fua->nri = (SrsAvcNaluType)header;
-            fua->nalu_type = SrsAvcNaluTypeParse(header);
             fua->start = bool(i == 0);
             fua->end = bool(i == num_of_packet - 1);
 
-            fua->payload = p;
             fua->size = packet_size;
-        }
-
-        pkt->wrap(msg);
 
         p += packet_size;
         nb_left -= packet_size;
@@ -1644,6 +1653,7 @@ srs_error_t SrsRtcFrameBuilder::packet_video(SrsRtpPacket* src)
     SrsRtpPacket* pkt = src->copy();
 
     if (pkt->is_keyframe()) {
+        // TODO: 处理H265
         return packet_video_key_frame(pkt);
     }
 
@@ -2197,6 +2207,33 @@ SrsMediaPayloadType SrsVideoPayload::generate_media_payload_type_h265()
     if (!h265_param_.tx_mode.empty()) {
         if (has_param) format_specific_param << ";";
         format_specific_param << "tx-mode=" << h265_param_.tx_mode;
+    }
+
+    media_payload_type.format_specific_param_ = format_specific_param.str();
+
+    return media_payload_type;
+}
+
+SrsMediaPayloadType SrsVideoPayload::generate_media_payload_type_h265()
+{
+    SrsMediaPayloadType media_payload_type(pt_);
+
+    media_payload_type.encoding_name_ = name_;
+    media_payload_type.clock_rate_ = sample_;
+    media_payload_type.rtcp_fb_ = rtcp_fbs_;
+
+    std::ostringstream format_specific_param;
+    if (!h265_param_.level_id.empty()) {
+        format_specific_param << "level-id=" << h265_param_.level_id;
+    }
+    if (!h265_param_.profile_id.empty()) {
+        format_specific_param << ";profile-id=" << h265_param_.profile_id;
+    }
+    if (!h265_param_.tier_flag.empty()) {
+        format_specific_param << ";tier-flag=" << h265_param_.tier_flag;
+    }
+    if (!h265_param_.tx_mode.empty()) {
+        format_specific_param << ";tx-mode=" << h265_param_.tx_mode;
     }
 
     media_payload_type.format_specific_param_ = format_specific_param.str();

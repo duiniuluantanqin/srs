@@ -810,18 +810,6 @@ srs_error_t SrsVideoFrame::parse_hevc_bframe(const SrsSample* sample, SrsFormat 
     }
 
     if (dependent_slice_segment_flag) {
-        return srs_error_new(ERROR_HEVC_DECODE_ERROR, "dependent slice segment flag is not supported");
-    }
-
-    for (int i = 0; i < pps->num_extra_slice_header_bits; i++) {
-        bs.skip_bits(1);
-    }
-
-    uint32_t slice_type;
-    if ((err = bs.read_bits_ue(slice_type)) != srs_success) {
-        return srs_error_wrap(err, "read slice type");
-    }
-
     is_b_frame = slice_type == SrsHevcSliceTypeB;
     if (is_b_frame) {
         srs_verbose("nalu_type=%d, slice type=%d", nalu_type, slice_type);
