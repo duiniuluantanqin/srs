@@ -1286,8 +1286,8 @@ srs_error_t SrsRtcRtpBuilder::package_nalus(SrsSharedPtrMessage* msg, const vect
             continue;
         }
 
-        if (first_nalu_type == 0) {
-            first_nalu_type = is_hevc ? uint8_t(SrsHevcNaluTypeParse(sample->bytes[0])) : uint8_t(SrsAvcNaluTypeParse(sample->bytes[0]));
+        if (first_nalu_type == SrsAvcNaluTypeReserved) {
+            first_nalu_type = SrsAvcNaluTypeParse(sample->bytes[0]);
         }
 
         raw_raw->push_back(sample->copy());
@@ -1458,6 +1458,7 @@ srs_error_t SrsRtcRtpBuilder::package_fu_a(SrsSharedPtrMessage* msg, SrsSample* 
             pkt->set_payload(fua, SrsRtspPacketPayloadTypeFUA2);
 
             fua->nri = (SrsAvcNaluType)header;
+            fua->nalu_type = SrsAvcNaluTypeParse(header);
             fua->start = bool(i == 0);
             fua->end = bool(i == num_of_packet - 1);
 
