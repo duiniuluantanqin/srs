@@ -2814,19 +2814,36 @@ void SrsRtcVideoRecvTrack::on_before_decode_payload(SrsRtpPacket* pkt, SrsBuffer
         return;
     }
 
-    uint8_t v = (uint8_t)(buf->head()[0] & kNalTypeMask);
-    pkt->nalu_type = v;
+    bool is_hevc = track_desc_->media_->name_ == "H265";
+    if (is_hevc) {
+        uint8_t v = SrsHevcNaluTypeParse(buf->head()[0]);
+        pkt->nalu_type = v;
 
-    if (v == kStapA) {
-        *ppayload = new SrsRtpSTAPPayload();
-        *ppt = SrsRtspPacketPayloadTypeSTAP;
-    } else if (v == kFuA) {
-        *ppayload = new SrsRtpFUAPayload2();
-        *ppt = SrsRtspPacketPayloadTypeFUA2;
+        if (v == kStapHevc) {
+            *ppayload = new SrsRtpSTAPPayloadHevc();
+            *ppt = SrsRtspPacketPayloadTypeSTAPHevc;
+        } else if (v == kFuHevc) {
+            *ppayload = new SrsRtpFUAPayloadHevc2();
+            *ppt = SrsRtspPacketPayloadTypeFUAHevc;
+        } else {
+            *ppayload = new SrsRtpRawPayload();
+            *ppt = SrsRtspPacketPayloadTypeRaw;
+        }
     } else {
-        *ppayload = new SrsRtpRawPayload();
-        *ppt = SrsRtspPacketPayloadTypeRaw;
-    }
+        uint8_t v = (uint8_t)(buf->head()[0] & kNalTypeMask);
+        pkt->nalu_type = v;
+
+        if (v == kStapA) {
+            *ppayload = new SrsRtpSTAPPayload();
+            *ppt = SrsRtspPacketPayloadTypeSTAP;
+        } else if (v == kFuA) {
+            *ppayload = new SrsRtpFUAPayload2();
+            *ppt = SrsRtspPacketPayloadTypeFUA2;
+        } else {
+            *ppayload = new SrsRtpRawPayload();
+            *ppt = SrsRtspPacketPayloadTypeRaw;
+        }
+    }    
 }
 
 srs_error_t SrsRtcVideoRecvTrack::on_rtp(SrsSharedPtr<SrsRtcSource>& source, SrsRtpPacket* pkt)
