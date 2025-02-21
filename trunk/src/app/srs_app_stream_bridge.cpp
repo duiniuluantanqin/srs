@@ -13,7 +13,6 @@
 #include <srs_protocol_rtmp_stack.hpp>
 #include <srs_kernel_rtc_rtp.hpp>
 #include <srs_core_autofree.hpp>
-#include <srs_protocol_utility.hpp>
 
 #include <vector>
 using namespace std;
@@ -147,7 +146,7 @@ void SrsFrameToRtcBridge::on_unpublish()
 
 srs_error_t SrsFrameToRtcBridge::on_frame(SrsSharedPtrMessage* frame)
 {
-#ifdef SRS_FFMPEG_FIT    
+#ifdef SRS_FFMPEG_FIT
     return rtp_builder_->on_frame(frame);
 #else
     return srs_success;
