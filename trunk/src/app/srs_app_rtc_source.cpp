@@ -483,23 +483,6 @@ void SrsRtcSource::init_for_play_before_publishing()
         video_track_desc->media_ = video_payload;
 
         video_payload->set_h264_param_desc("level-asymmetry-allowed=1;packetization-mode=1;profile-level-id=42e01f");
-
-#ifdef SRS_H265
-        // default h265 video track description
-        SrsRtcTrackDescription* h265_video_track_desc = new SrsRtcTrackDescription();
-        stream_desc->video_track_descs_.push_back(h265_video_track_desc);
-
-        h265_video_track_desc->type_ = "video";
-        h265_video_track_desc->id_ = "video-" + srs_random_str(8);
-        h265_video_track_desc->ssrc_ = video_ssrc;
-        h265_video_track_desc->direction_ = "recvonly";
-
-        SrsVideoPayload* h265_video_payload = new SrsVideoPayload(kVideoPayloadType, "H265", kVideoSamplerate);
-        h265_video_track_desc->media_ = h265_video_payload;
-
-        h265_video_payload->set_h265_param_desc("level-id=180;profile-id=1;tier-flag=0;tx-mode=SRST");
-#endif
-
     }
 
     set_stream_desc(stream_desc.get());

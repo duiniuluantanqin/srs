@@ -197,17 +197,6 @@ SrsCompositeBridge::SrsCompositeBridge()
 }
 
 SrsCompositeBridge::~SrsCompositeBridge()
-{
-    for (vector<ISrsStreamBridge*>::iterator it = bridges_.begin(); it != bridges_.end(); ++it) {
-        ISrsStreamBridge* bridge = *it;
-        srs_freep(bridge);
-    }
-}
-
-srs_error_t SrsCompositeBridge::initialize(SrsRequest* r)
-{
-    srs_error_t err = srs_success;
-
     for (vector<ISrsStreamBridge*>::iterator it = bridges_.begin(); it != bridges_.end(); ++it) {
         ISrsStreamBridge* bridge = *it;
         if ((err = bridge->initialize(r)) != srs_success) {
