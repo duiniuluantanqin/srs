@@ -2268,7 +2268,7 @@ SrsVideoPayload::SrsVideoPayload(uint8_t pt, std::string encode_name, int sample
     type_ = "video";
     h264_param_.profile_level_id = "";
     h264_param_.packetization_mode = "";
-    h264_param_.level_asymmerty_allow = "";
+    h264_param_.level_asymmetry_allow = "";
 }
 
 SrsVideoPayload::~SrsVideoPayload()
@@ -2411,7 +2411,7 @@ srs_error_t SrsVideoPayload::set_h264_param_desc(std::string fmtp)
             // @see https://tools.ietf.org/html/rfc6184#section-6.3
             h264_param_.packetization_mode = kv[1];
         } else if (kv[0] == "level-asymmetry-allowed") {
-            h264_param_.level_asymmerty_allow = kv[1];
+            h264_param_.level_asymmetry_allow = kv[1];
         } else {
             return srs_error_new(ERROR_RTC_SDP_DECODE, "invalid h264 param=%s", kv[0].c_str());
         }
