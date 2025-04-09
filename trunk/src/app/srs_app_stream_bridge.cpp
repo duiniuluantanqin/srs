@@ -171,27 +171,16 @@ srs_error_t SrsFrameToRtcBridge::update_codec(SrsVideoCodecId id)
         return err;
     }
 
-    // Check if H.265 track description exists
-    if (!source_->get_track_desc("video", "H265").empty()) {
-        return err;
-    }
-
-    // Try to convert H.264 track to H.265
-    std::vector<SrsRtcTrackDescription*> video_track_descs = source_->get_track_desc("video", "H264");
+    std::vector<SrsRtcTrackDescription*> video_track_descs = source_->get_track_desc("video", "H265");
     if (video_track_descs.empty()) {
-        return srs_error_new(ERROR_RTC_NO_TRACK, "no H264 track found for conversion");
+        return srs_error_new(ERROR_RTC_NO_TRACK, "no H265 track found for conversion");
     }
 
-    SrsRtcTrackDescription* video_track_desc = video_track_descs.at(0);
-    SrsVideoPayload* video_payload = (SrsVideoPayload*)video_track_desc->media_;
-    video_payload->name_ = "H265";
-    video_payload->set_h265_param_desc("level-id=180;profile-id=1;tier-flag=0;tx-mode=SRST");
+    rtp_builder_->update_video_info(video_track_descs.at(0)->ssrc_, video_track_descs.at(0)->media_->pt_);
 
     codec_switched_ = true;
 
-    srs_trace("RTC: Switch video codec %d(%s) to %d(%s)",
-            SrsVideoCodecIdAVC, srs_video_codec_id2str(SrsVideoCodecIdAVC).c_str(),
-            id, srs_video_codec_id2str(id).c_str());
+    srs_trace("RTC: Switch video ssrc to %d, pt to %d", video_track_descs.at(0)->ssrc_, video_track_descs.at(0)->media_->pt_);
 
     return err;
 }

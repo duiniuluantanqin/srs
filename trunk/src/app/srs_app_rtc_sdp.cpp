@@ -469,6 +469,16 @@ srs_error_t SrsMediaDesc::encode(std::ostringstream& os)
     if (rtcp_rsize_) {
         os << "a=rtcp-rsize" << kCRLF;
     }
+        
+    // for(int i = 0; i < (int)payload_types_.size(); i++) {
+    //     if ((err = payload_types_[i].encode(os)) != srs_success) {
+    //         return srs_error_wrap(err, "encode media payload failed");
+    //     }
+
+    //     if ((err = ssrc_infos_[i].encode(os)) != srs_success) {
+    //         return srs_error_wrap(err, "encode ssrc failed");
+    //     }
+    // }
 
     for (std::vector<SrsMediaPayloadType>::iterator iter = payload_types_.begin(); iter != payload_types_.end(); ++iter) {
         if ((err = iter->encode(os)) != srs_success) {
@@ -483,6 +493,20 @@ srs_error_t SrsMediaDesc::encode(std::ostringstream& os)
             return srs_error_wrap(err, "encode ssrc failed");
         }
     }
+
+    // os << "a=ssrc-group:FID " << ssrc_infos_[0].ssrc_ << " " << ssrc_infos_[1].ssrc_ << kCRLF;
+
+
+    // for(int i = 0; i < (int)payload_types_.size(); i++) {
+    //     os << "a=rid:" << i << " send " << "pt=" << payload_types_[i].payload_type_ << " " << "ssrc=" << ssrc_infos_[i].ssrc_ << kCRLF;
+    // }
+
+    // os << "a=simulcast:send 0";
+
+    // for(int i = 1; i < (int)payload_types_.size(); i++) {
+    //     os << ";" << i;
+    // }
+    // os << kCRLF;
 
     int foundation = 0;
     int component_id = 1; /* RTP */

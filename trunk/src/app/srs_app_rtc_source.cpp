@@ -485,6 +485,24 @@ void SrsRtcSource::init_for_play_before_publishing()
         video_payload->set_h264_param_desc("level-asymmetry-allowed=1;packetization-mode=1;profile-level-id=42e01f");
     }
 
+    // video track description
+    if (true) {
+        SrsRtcTrackDescription* video_track_desc = new SrsRtcTrackDescription();
+        stream_desc->video_track_descs_.push_back(video_track_desc);
+
+        video_track_desc->type_ = "video";
+        video_track_desc->id_ = "video-" + srs_random_str(8);
+
+        uint32_t video_ssrc = SrsRtcSSRCGenerator::instance()->generate_ssrc();
+        video_track_desc->ssrc_ = video_ssrc;
+        video_track_desc->direction_ = "recvonly";
+
+        SrsVideoPayload* video_payload = new SrsVideoPayload(123, "H265", kVideoSamplerate);
+        video_track_desc->media_ = video_payload;
+
+        video_payload->set_h265_param_desc("level-id=180;profile-id=1;tier-flag=0;tx-mode=SRST");
+    }
+
     set_stream_desc(stream_desc.get());
 }
 
@@ -854,6 +872,13 @@ SrsRtcRtpBuilder::~SrsRtcRtpBuilder()
     srs_freep(format);
     srs_freep(codec_);
     srs_freep(meta);
+}
+
+srs_error_t SrsRtcRtpBuilder::update_video_info(uint32_t ssrc, uint8_t pt)
+{
+    video_ssrc_ = ssrc;
+    video_payload_type_ = pt;
+    return srs_success;
 }
 
 srs_error_t SrsRtcRtpBuilder::initialize(SrsRequest* r)

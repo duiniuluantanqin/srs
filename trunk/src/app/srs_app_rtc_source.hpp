@@ -291,6 +291,7 @@ public:
     SrsRtcRtpBuilder(SrsFrameToRtcBridge* bridge, uint32_t assrc, uint8_t apt, uint32_t vssrc, uint8_t vpt);
     virtual ~SrsRtcRtpBuilder();
 public:
+    virtual srs_error_t update_video_info(uint32_t ssrc, uint8_t pt);
     virtual srs_error_t initialize(SrsRequest* r);
     virtual srs_error_t on_publish();
     virtual void on_unpublish();
