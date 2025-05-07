@@ -63,6 +63,7 @@ public:
 private:
     srs_error_t http_hooks_on_play(SrsRequest* req);
     srs_error_t get_ssrc_by_stream_id(uint32_t stream_id, uint32_t* ssrc);
+    std::string get_video_fmtp();
 };
 
 class SrsRtspConn : public SrsRtcConnection, public ISrsCoroutineHandler, public ISrsStartable

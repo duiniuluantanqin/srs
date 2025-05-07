@@ -606,6 +606,8 @@ public:
     virtual void on_edge_proxy_unpublish();
 public:
     virtual std::string get_curr_origin();
+public:
+    virtual SrsMetaCache* get_meta();
 };
 
 #endif

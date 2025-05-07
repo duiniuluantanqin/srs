@@ -11,10 +11,9 @@
 #include <srs_app_rtc_sdp.hpp>
 #include <srs_app_rtc_server.hpp>
 #include <srs_protocol_st.hpp>
+#include <srs_app_source.hpp>
 
 #include <sstream>
-
-extern SrsResourceManager* _srs_rtc_manager;
 
 #define SRS_RTP_TCP_PACKET_HEADER_SIZE 4
 
@@ -180,6 +179,10 @@ srs_error_t SrsRtspSession::do_describe(SrsRtspRequest* req, std::string& sdp)
         SrsMediaPayloadType& ps_video = media_video.payload_types_.at(0);
         ps_video.encoding_name_ = video_track_desc->media_->name_;
         ps_video.clock_rate_ = video_track_desc->media_->sample_;
+        std::string fmtp = get_video_fmtp();
+        if (!fmtp.empty()) {
+            ps_video.format_specific_param_ = fmtp;
+        }
 
         local_sdp.media_descs_.push_back(media_video);
         track_id++;
@@ -292,6 +295,43 @@ srs_error_t SrsRtspSession::get_ssrc_by_stream_id(uint32_t stream_id, uint32_t* 
         }
     }
     return srs_error_new(ERROR_RTC_NO_TRACK, "track not found for stream_id: %u", stream_id);
+}
+
+std::string SrsRtspSession::get_video_fmtp()
+{
+    SrsSharedPtr<SrsLiveSource> live_source = _srs_sources->fetch(request_);
+    if (!live_source.get()) {
+        return "";
+    }
+
+    SrsFormat* format = live_source->get_meta()->vsh_format();
+    if (!format || !format->vcodec) {
+        return "";
+    }
+
+    const std::vector<char>& sps = format->vcodec->sequenceParameterSetNALUnit;
+    const std::vector<char>& pps = format->vcodec->pictureParameterSetNALUnit;
+    if (sps.empty() || pps.empty()) {
+        return "";
+    }
+
+    std::string sps_str(sps.data(), sps.size());
+    std::string pps_str(pps.data(), pps.size());
+
+    std::string profile_level_id = "42e01f"; // default
+    if (sps.size() >= 4) {
+        char profile_data[7];
+        snprintf(profile_data, sizeof(profile_data), "%02x%02x%02x", 
+            (uint8_t)sps[1], (uint8_t)sps[2], (uint8_t)sps[3]);
+        profile_level_id = profile_data;
+    }
+
+    std::string sps_base64, pps_base64;
+    srs_av_base64_encode(sps_str, sps_base64);
+    srs_av_base64_encode(pps_str, pps_base64);
+    std::string fmtp = "packetization-mode=1; profile-level-id=" + profile_level_id + "; sprop-parameter-sets=" + sps_base64 + "," + pps_base64;
+
+    return fmtp;
 }
 
 SrsRtspConn::SrsRtspConn(ISrsResourceManager* cm, ISrsProtocolReadWriter* skt, std::string cip, int port) : SrsRtcConnection(NULL, _srs_context->generate_id())

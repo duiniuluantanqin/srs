@@ -2789,3 +2789,8 @@ string SrsLiveSource::get_curr_origin()
     return play_edge->get_curr_origin();
 }
 
+SrsMetaCache* SrsLiveSource::get_meta()
+{
+    return meta;
+}
+
