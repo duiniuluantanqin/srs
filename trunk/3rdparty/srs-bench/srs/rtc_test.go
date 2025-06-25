@@ -622,6 +622,194 @@ func TestRtcBasic_PublishPlay(t *testing.T) {
 	}()
 }
 
+// Basic use scenario, publish a stream with H.265 encoding, then play it.
+func TestRtcBasic_PublishPlay_Hevc(t *testing.T) {
+	ctx := logger.WithContext(context.Background())
+	ctx, cancel := context.WithTimeout(ctx, time.Duration(*srsTimeout)*time.Millisecond)
+
+	var r0, r1, r2, r3 error
+	defer func(ctx context.Context) {
+		if err := filterTestError(ctx.Err(), r0, r1, r2, r3); err != nil {
+			t.Errorf("Fail for err %+v", err)
+		} else {
+			logger.Tf(ctx, "test done with err %+v", err)
+		}
+	}(ctx)
+
+	var resources []io.Closer
+	defer func() {
+		for _, resource := range resources {
+			_ = resource.Close()
+		}
+	}()
+
+	var wg sync.WaitGroup
+	defer wg.Wait()
+
+	// The event notify.
+	var thePublisher *testPublisher
+	var thePlayer *testPlayer
+
+	mainReady, mainReadyCancel := context.WithCancel(context.Background())
+	publishReady, publishReadyCancel := context.WithCancel(context.Background())
+
+	// Objects init.
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		defer cancel()
+
+		doInit := func() (err error) {
+			streamSuffix := fmt.Sprintf("basic-publish-play-hevc-%v-%v", os.Getpid(), rand.Int())
+
+			// Initialize player with H.265 codecs.
+			if thePlayer, err = newTestPlayer(registerHevcCodecs, func(play *testPlayer) error {
+				play.streamSuffix = streamSuffix
+				play.codec = "hevc" // Set codec parameter for H.265
+				resources = append(resources, play)
+
+				var nnPlayWriteRTCP, nnPlayReadRTCP, nnPlayWriteRTP, nnPlayReadRTP uint64
+
+				return play.Setup(*srsVnetClientIP, func(api *testWebRTCAPI) {
+					api.registry.Add(newRTPInterceptor(func(i *rtpInterceptor) {
+						i.rtpReader = func(payload []byte, attributes interceptor.Attributes) (int, interceptor.Attributes, error) {
+							if nnPlayReadRTP++; nnPlayReadRTP >= uint64(*srsPlayOKPackets) {
+								cancel() // Completed.
+							}
+							logger.Tf(ctx, "Play rtp=(recv:%v, send:%v), rtcp=(recv:%v send:%v) packets",
+								nnPlayReadRTP, nnPlayWriteRTP, nnPlayReadRTCP, nnPlayWriteRTCP)
+							return i.nextRTPReader.Read(payload, attributes)
+						}
+					}))
+					api.registry.Add(newRTCPInterceptor(func(i *rtcpInterceptor) {
+						i.rtcpReader = func(buf []byte, attributes interceptor.Attributes) (int, interceptor.Attributes, error) {
+							nn, attr, err := i.nextRTCPReader.Read(buf, attributes)
+							nnPlayReadRTCP++
+							return nn, attr, err
+						}
+						i.rtcpWriter = func(pkts []rtcp.Packet, attributes interceptor.Attributes) (int, error) {
+							nn, err := i.nextRTCPWriter.Write(pkts, attributes)
+							nnPlayWriteRTCP++
+							return nn, err
+						}
+					}))
+				})
+			}); err != nil {
+				return err
+			}
+
+			// Initialize publisher with H.265 codecs.
+			if thePublisher, err = newTestPublisher(registerHevcCodecs, func(pub *testPublisher) error {
+				pub.streamSuffix = streamSuffix
+				pub.codec = "hevc" // Set codec parameter for H.265
+				pub.iceReadyCancel = publishReadyCancel
+				resources = append(resources, pub)
+
+				// Set H.265 video ingester
+				pub.vIngester = newVideoIngester(strings.Replace(*srsPublishVideo, ".h264", ".h265", 1))
+				pub.vIngester.fps = *srsPublishVideoFps
+
+				// Verify SDP contains H.265 codec
+				pub.onOffer = func(s *webrtc.SessionDescription) error {
+					if !strings.Contains(s.SDP, "H265") {
+						r1 = errors.Errorf("SDP does not contain H.265 codec: %s", s.SDP)
+					} else {
+						logger.Tf(ctx, "SDP contains H.265 codec as expected")
+					}
+					return nil
+				}
+
+				pub.onAnswer = func(s *webrtc.SessionDescription) error {
+					if !strings.Contains(s.SDP, "H265") {
+						r1 = errors.Errorf("Answer SDP does not contain H.265 codec: %s", s.SDP)
+					} else {
+						logger.Tf(ctx, "Answer SDP contains H.265 codec as expected")
+					}
+					return nil
+				}
+
+				var nnPubWriteRTCP, nnPubReadRTCP, nnPubWriteRTP, nnPubReadRTP uint64
+				return pub.Setup(*srsVnetClientIP, func(api *testWebRTCAPI) {
+					api.registry.Add(newRTPInterceptor(func(i *rtpInterceptor) {
+						i.rtpReader = func(buf []byte, attributes interceptor.Attributes) (int, interceptor.Attributes, error) {
+							nn, attr, err := i.nextRTPReader.Read(buf, attributes)
+							nnPubReadRTP++
+							return nn, attr, err
+						}
+						i.rtpWriter = func(header *rtp.Header, payload []byte, attributes interceptor.Attributes) (int, error) {
+							// Verify we're sending H.265 data
+							if len(payload) > 0 {
+								nalType := (payload[0] & 0x7E) >> 1
+								if nalType >= 32 && nalType <= 40 {
+									logger.If(ctx, "Sending H.265 NAL unit, type=%d", nalType)
+								}
+							}
+
+							nn, err := i.nextRTPWriter.Write(header, payload, attributes)
+							nnPubWriteRTP++
+							logger.Tf(ctx, "Publish rtp=(recv:%v, send:%v), rtcp=(recv:%v send:%v) packets",
+								nnPubReadRTP, nnPubWriteRTP, nnPubReadRTCP, nnPubWriteRTCP)
+							return nn, err
+						}
+					}))
+					api.registry.Add(newRTCPInterceptor(func(i *rtcpInterceptor) {
+						i.rtcpReader = func(buf []byte, attributes interceptor.Attributes) (int, interceptor.Attributes, error) {
+							nn, attr, err := i.nextRTCPReader.Read(buf, attributes)
+							nnPubReadRTCP++
+							return nn, attr, err
+						}
+						i.rtcpWriter = func(pkts []rtcp.Packet, attributes interceptor.Attributes) (int, error) {
+							nn, err := i.nextRTCPWriter.Write(pkts, attributes)
+							nnPubWriteRTCP++
+							return nn, err
+						}
+					}))
+				})
+			}); err != nil {
+				return err
+			}
+
+			// Init done.
+			mainReadyCancel()
+
+			<-ctx.Done()
+			return nil
+		}
+
+		if err := doInit(); err != nil {
+			r1 = err
+		}
+	}()
+
+	// Run publisher.
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		defer cancel()
+
+		select {
+		case <-ctx.Done():
+		case <-mainReady.Done():
+			r2 = thePublisher.Run(logger.WithContext(ctx), cancel)
+			logger.Tf(ctx, "pub done")
+		}
+	}()
+
+	// Run player.
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		defer cancel()
+
+		select {
+		case <-ctx.Done():
+		case <-publishReady.Done():
+			r3 = thePlayer.Run(logger.WithContext(ctx), cancel)
+			logger.Tf(ctx, "play done")
+		}
+	}()
+}
+
 // The srs-server is DTLS server(passive), srs-bench is DTLS client which is active mode.
 //
 //	No.1  srs-bench: ClientHello
@@ -2348,7 +2536,10 @@ func TestRtcPublish_HttpFlvPlay(t *testing.T) {
 		doInit := func() (err error) {
 			// Initialize publisher with private api.
 			if thePublisher, err = newTestPublisher(registerDefaultCodecs, func(pub *testPublisher) error {
+				pub.vIngester = newVideoIngester(strings.Replace(*srsPublishVideo, ".h264", ".h265", 1))
+				pub.vIngester.fps = *srsPublishVideoFps
 				pub.streamSuffix = streamSuffix
+				pub.codec = "hevc" // Set codec parameter for H.265
 				pub.iceReadyCancel = publishReadyCancel
 				resources = append(resources, pub)
 
@@ -2394,6 +2585,139 @@ func TestRtcPublish_HttpFlvPlay(t *testing.T) {
 			return
 		case <-publishReady.Done():
 		}
+
+		player := NewFLVPlayer()
+		defer player.Close()
+
+		r3 = func() error {
+			flvUrl := fmt.Sprintf("http://%v%v-%v.flv", *srsHttpServer, *srsStream, streamSuffix)
+			if err := player.Play(ctx, flvUrl); err != nil {
+				return err
+			}
+
+			var nnVideo, nnAudio int
+			var hasVideo, hasAudio bool
+			player.onRecvHeader = func(ha, hv bool) error {
+				hasAudio, hasVideo = ha, hv
+				return nil
+			}
+			player.onRecvTag = func(tagType flv.TagType, size, timestamp uint32, tag []byte) error {
+				if tagType == flv.TagTypeAudio {
+					nnAudio++
+				} else if tagType == flv.TagTypeVideo {
+					nnVideo++
+				}
+				logger.Tf(ctx, "got %v tag, %v %vms %vB", nnVideo+nnAudio, tagType, timestamp, len(tag))
+
+				if audioPacketsOK, videoPacketsOK := hasAudio && nnAudio >= 10, hasVideo && nnVideo >= 10; audioPacketsOK && videoPacketsOK {
+					logger.Tf(ctx, "Flv recv %v/%v audio, %v/%v video", hasAudio, nnAudio, hasVideo, nnVideo)
+					cancel()
+				}
+				return nil
+			}
+			if err := player.Consume(ctx); err != nil {
+				return err
+			}
+
+			return nil
+		}()
+	}()
+}
+
+func TestRtcPublish_HttpFlvPlay_Hevc(t *testing.T) {
+	ctx := logger.WithContext(context.Background())
+	ctx, cancel := context.WithTimeout(ctx, time.Duration(*srsTimeout)*time.Millisecond)
+
+	var r0, r1, r2, r3 error
+	defer func(ctx context.Context) {
+		if err := filterTestError(ctx.Err(), r0, r1, r2, r3); err != nil {
+			t.Errorf("Fail for err %+v", err)
+		} else {
+			logger.Tf(ctx, "test done with err %+v", err)
+		}
+	}(ctx)
+
+	var resources []io.Closer
+	defer func() {
+		for _, resource := range resources {
+			_ = resource.Close()
+		}
+	}()
+
+	var wg sync.WaitGroup
+	defer wg.Wait()
+
+	// The event notify.
+	var thePublisher *testPublisher
+
+	mainReady, mainReadyCancel := context.WithCancel(context.Background())
+	publishReady, publishReadyCancel := context.WithCancel(context.Background())
+
+	streamSuffix := fmt.Sprintf("basic-publish-flvplay-%v-%v/?codec=hevc", os.Getpid(), rand.Int())
+	// Objects init.
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		defer cancel()
+
+		doInit := func() (err error) {
+			// Initialize publisher with private api.
+			if thePublisher, err = newTestPublisher(registerDefaultCodecs, func(pub *testPublisher) error {
+				pub.vIngester = newVideoIngester(strings.Replace(*srsPublishVideo, ".h264", ".h265", 1))
+				pub.vIngester.fps = *srsPublishVideoFps
+				pub.streamSuffix = streamSuffix
+				pub.codec = "hevc" // Set codec parameter for H.265
+				pub.iceReadyCancel = publishReadyCancel
+				resources = append(resources, pub)
+
+				return pub.Setup(*srsVnetClientIP)
+			}); err != nil {
+				return err
+			}
+
+			// Init done.
+			mainReadyCancel()
+
+			<-ctx.Done()
+			return nil
+		}
+
+		if err := doInit(); err != nil {
+			r1 = err
+		}
+	}()
+
+	// Run publisher.
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		defer cancel()
+
+		select {
+		case <-ctx.Done():
+		case <-mainReady.Done():
+			r2 = thePublisher.Run(logger.WithContext(ctx), cancel)
+			logger.Tf(ctx, "pub done")
+		}
+	}()
+
+	// Run player.
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		defer cancel()
+
+		select {
+		case <-ctx.Done():
+			return
+		case <-publishReady.Done():
+		}
+
+		// When converting RTC to RTMP, in order to achieve audio-video synchronization,
+		// the conversion will not commence until the RTCP packet has been received.
+		// For simplicity, a waiting period of three seconds is employed.
+		// Otherwise, the video might not be present.
+		time.Sleep(3 * time.Second)
 
 		player := NewFLVPlayer()
 		defer player.Close()

@@ -29,6 +29,7 @@ import (
 
 	"github.com/ossrs/go-oryx-lib/errors"
 	"github.com/ossrs/go-oryx-lib/logger"
+	"github.com/ossrs/srs-bench/gb28181"
 	"github.com/pion/interceptor"
 	"github.com/pion/rtp"
 	"github.com/pion/sdp/v3"
@@ -68,6 +69,8 @@ func (v *videoIngester) AddTrack(pc *webrtc.PeerConnection, fps int) error {
 	mimeType, trackID := "video/H264", "video"
 	if strings.HasSuffix(v.sourceVideo, ".ivf") {
 		mimeType = "video/VP8"
+	} else if strings.HasSuffix(v.sourceVideo, ".h265") {
+		mimeType = "video/H265"
 	}
 
 	var err error
@@ -94,12 +97,6 @@ func (v *videoIngester) Ingest(ctx context.Context) error {
 	}
 	defer f.Close()
 
-	// TODO: FIXME: Support ivf for vp8.
-	h264, err := h264reader.NewReader(f)
-	if err != nil {
-		return errors.Wrapf(err, "Open h264 %v", source)
-	}
-
 	enc := sender.GetParameters().Encodings[0]
 	codec := sender.GetParameters().Codecs[0]
 	headers := sender.GetParameters().HeaderExtensions
@@ -111,6 +108,102 @@ func (v *videoIngester) Ingest(ctx context.Context) error {
 
 	clock := newWallClock()
 	sampleDuration := time.Duration(uint64(time.Millisecond) * 1000 / uint64(fps))
+
+	// Handle different video formats
+	if strings.HasSuffix(v.sourceVideo, ".h265") {
+		// For H.265, read raw NAL units
+		return v.ingestH265(ctx, f, track, sampleDuration, clock)
+	} else {
+		// For H.264, use existing h264reader
+		return v.ingestH264(ctx, f, track, sampleDuration, clock)
+	}
+}
+
+func (v *videoIngester) ingestH265(ctx context.Context, f *os.File, track *webrtc.TrackLocalStaticSample, sampleDuration time.Duration, clock *wallClock) error {
+	h265, err := gb28181.NewReader(f)
+	if err != nil {
+		return errors.Wrapf(err, "Open h265 %v", v.sourceVideo)
+	}
+
+	for ctx.Err() == nil {
+		var vps, sps, pps *gb28181.NAL
+		var oFrames []*gb28181.NAL
+		for ctx.Err() == nil {
+			frame, err := h265.NextNAL()
+			if err == io.EOF {
+				return io.EOF
+			}
+			if err != nil {
+				return errors.Wrapf(err, "Read h265")
+			}
+
+			oFrames = append(oFrames, frame)
+			logger.If(ctx, "NALU UnitType=%d PictureOrderCount=%v, ForbiddenZeroBit=%v, %v bytes",
+				int(frame.UnitType), frame.PictureOrderCount, frame.ForbiddenZeroBit, len(frame.Data))
+
+			if frame.UnitType == gb28181.NaluTypeVps {
+				vps = frame
+			} else if frame.UnitType == gb28181.NaluTypeSps {
+				sps = frame
+			} else if frame.UnitType == gb28181.NaluTypePps {
+				pps = frame
+			} else {
+				break
+			}
+		}
+
+		var frames []*gb28181.NAL
+		// Package VPS/SPS/PPS to STAP-A
+		if vps != nil && sps != nil && pps != nil {
+			stapA := packageAsSTAPAHevc(vps, sps, pps)
+			frames = append(frames, stapA)
+		}
+		// Append other original frames.
+		for _, frame := range oFrames {
+			if frame.UnitType != gb28181.NaluTypeVps && frame.UnitType != gb28181.NaluTypeSps && frame.UnitType != gb28181.NaluTypePps {
+				frames = append(frames, frame)
+			}
+		}
+
+		// Convert frames to sample(buffers).
+		for i, frame := range frames {
+			sample := media.Sample{Data: frame.Data, Duration: sampleDuration}
+			// Use the sample timestamp for frames.
+			if i != len(frames)-1 {
+				sample.Duration = 0
+			}
+
+			// For STAP-A, set marker to false, to make Chrome happy.
+			if ri := v.markerInterceptor; ri.rtpWriter == nil {
+				ri.rtpWriter = func(header *rtp.Header, payload []byte, attributes interceptor.Attributes) (int, error) {
+					// TODO: Should we decode to check whether VPS/SPS/PPS?
+					if len(payload) > 0 && payload[0]&0x7E == 96 { // 48 << 1 = 96, STAP-A
+						header.Marker = false
+					}
+					return ri.nextRTPWriter.Write(header, payload, attributes)
+				}
+			}
+
+			if err = track.WriteSample(sample); err != nil {
+				return errors.Wrapf(err, "Write sample")
+			}
+		}
+
+		if d := clock.Tick(sampleDuration); d > 0 {
+			time.Sleep(d)
+		}
+	}
+
+	return ctx.Err()
+}
+
+func (v *videoIngester) ingestH264(ctx context.Context, f *os.File, track *webrtc.TrackLocalStaticSample, sampleDuration time.Duration, clock *wallClock) error {
+	// TODO: FIXME: Support ivf for vp8.
+	h264, err := h264reader.NewReader(f)
+	if err != nil {
+		return errors.Wrapf(err, "Open h264 %v", v.sourceVideo)
+	}
+
 	for ctx.Err() == nil {
 		var sps, pps *h264reader.NAL
 		var oFrames []*h264reader.NAL
@@ -124,8 +217,8 @@ func (v *videoIngester) Ingest(ctx context.Context) error {
 			}
 
 			oFrames = append(oFrames, frame)
-			logger.If(ctx, "NALU %v PictureOrderCount=%v, ForbiddenZeroBit=%v, RefIdc=%v, %v bytes",
-				frame.UnitType.String(), frame.PictureOrderCount, frame.ForbiddenZeroBit, frame.RefIdc, len(frame.Data))
+			logger.If(ctx, "NALU UnitType=%d PictureOrderCount=%v, ForbiddenZeroBit=%v, %v bytes",
+				int(frame.UnitType), frame.PictureOrderCount, frame.ForbiddenZeroBit, len(frame.Data))
 
 			if frame.UnitType == h264reader.NalUnitTypeSPS {
 				sps = frame

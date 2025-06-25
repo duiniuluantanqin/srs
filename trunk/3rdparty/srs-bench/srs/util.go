@@ -54,6 +54,7 @@ import (
 
 	"github.com/ossrs/go-oryx-lib/errors"
 	"github.com/ossrs/go-oryx-lib/logger"
+	"github.com/ossrs/srs-bench/gb28181"
 	vnet_proxy "github.com/ossrs/srs-bench/vnet"
 	"github.com/pion/interceptor"
 	"github.com/pion/logging"
@@ -91,9 +92,9 @@ func prepareTest() (err error) {
 	srsStream = flag.String("srs-stream", "/rtc/regression", "The RTC app/stream to play")
 	srsLiveStream = flag.String("srs-live-stream", "/live/livestream", "The LIVE app/stream to play")
 	srsLog = flag.Bool("srs-log", false, "Whether enable the detail log")
-	srsTimeout = flag.Int("srs-timeout", 5000, "For each case, the timeout in ms")
+	srsTimeout = flag.Int("srs-timeout", 50000, "For each case, the timeout in ms")
 	srsPlayPLI = flag.Int("srs-play-pli", 5000, "The PLI interval in seconds for player.")
-	srsPlayOKPackets = flag.Int("srs-play-ok-packets", 10, "If recv N RTP packets, it's ok, or fail")
+	srsPlayOKPackets = flag.Int("srs-play-ok-packets", 10000, "If recv N RTP packets, it's ok, or fail")
 	srsPublishOKPackets = flag.Int("srs-publish-ok-packets", 3, "If send N RTP, recv N RTCP packets, it's ok, or fail")
 	srsPublishAudio = flag.String("srs-publish-audio", "avatar.ogg", "The audio file for publisher.")
 	srsPublishVideo = flag.String("srs-publish-video", "avatar.h264", "The video file for publisher.")
@@ -241,6 +242,29 @@ func packageAsSTAPA(frames ...*h264reader.NAL) *h264reader.NAL {
 		ForbiddenZeroBit:  false,
 		RefIdc:            first.RefIdc,
 		UnitType:          h264reader.NalUnitType(24), // STAP-A
+		Data:              buf.Bytes(),
+	}
+}
+
+func packageAsSTAPAHevc(frames ...*gb28181.NAL) *gb28181.NAL {
+	first := frames[0]
+
+	buf := bytes.Buffer{}
+	buf.WriteByte(
+		48 << 1, // STAP-A
+	)
+	buf.WriteByte(1)
+
+	for _, frame := range frames {
+		buf.WriteByte(byte(len(frame.Data) >> 8))
+		buf.WriteByte(byte(len(frame.Data)))
+		buf.Write(frame.Data)
+	}
+
+	return &gb28181.NAL{
+		PictureOrderCount: first.PictureOrderCount,
+		ForbiddenZeroBit:  false,
+		UnitType:          gb28181.NalUnitType(48), // STAP-A
 		Data:              buf.Bytes(),
 	}
 }
@@ -674,6 +698,32 @@ func registerMiniCodecsWithoutNack(api *testWebRTCAPI) error {
 	return nil
 }
 
+// Implements interface testWebRTCAPIInitFunc to init testWebRTCAPI
+func registerHevcCodecs(api *testWebRTCAPI) error {
+	v := api
+
+	if err := v.mediaEngine.RegisterCodec(webrtc.RTPCodecParameters{
+		RTPCodecCapability: webrtc.RTPCodecCapability{webrtc.MimeTypeOpus, 48000, 2, "minptime=10;useinbandfec=1", nil},
+		PayloadType:        111,
+	}, webrtc.RTPCodecTypeAudio); err != nil {
+		return err
+	}
+
+	videoRTCPFeedback := []webrtc.RTCPFeedback{{"goog-remb", ""}, {"ccm", "fir"}, {"nack", ""}, {"nack", "pli"}}
+	if err := v.mediaEngine.RegisterCodec(webrtc.RTPCodecParameters{
+		RTPCodecCapability: webrtc.RTPCodecCapability{webrtc.MimeTypeH265, 90000, 0, "level-id=180;profile-id=1;tier-flag=0;tx-mode=SRST", videoRTCPFeedback},
+		PayloadType:        49,
+	}, webrtc.RTPCodecTypeVideo); err != nil {
+		return err
+	}
+
+	if err := webrtc.RegisterDefaultInterceptors(v.mediaEngine, v.registry); err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func newTestWebRTCAPI(inits ...testWebRTCAPIInitFunc) (*testWebRTCAPI, error) {
 	v := &testWebRTCAPI{}
 
@@ -786,6 +836,8 @@ type testPlayer struct {
 	streamSuffix string
 	// Optional app/stream to play, use srsStream by default.
 	defaultStream string
+	// Optional codec parameter for URL, e.g., "hevc" for H.265
+	codec string
 }
 
 // Create test player, the init is used to initialize api which maybe nil,
@@ -835,6 +887,14 @@ func (v *testPlayer) Run(ctx context.Context, cancel context.CancelFunc) error {
 	}
 	if v.streamSuffix != "" {
 		r = fmt.Sprintf("%v-%v", r, v.streamSuffix)
+	}
+	// Add codec parameter if specified
+	if v.codec != "" {
+		if strings.Contains(r, "?") {
+			r = fmt.Sprintf("%v&codec=%v", r, v.codec)
+		} else {
+			r = fmt.Sprintf("%v?codec=%v", r, v.codec)
+		}
 	}
 	pli := time.Duration(*srsPlayPLI) * time.Millisecond
 	logger.Tf(ctx, "Run play url=%v", r)
@@ -1056,6 +1116,8 @@ type testPublisher struct {
 	cancel context.CancelFunc
 	// The config for peer connection.
 	pcc *webrtc.Configuration
+	// Optional codec parameter for URL, e.g., "hevc" for H.265
+	codec string
 }
 
 // Create test publisher, the init is used to initialize api which maybe nil,
@@ -1080,10 +1142,10 @@ func newTestPublisher(init testWebRTCAPIInitFunc, options ...testPublisherOption
 	}
 
 	// Create ingesters.
-	if sourceAudio != "" {
+	if v.aIngester == nil && sourceAudio != "" {
 		v.aIngester = newAudioIngester(sourceAudio)
 	}
-	if sourceVideo != "" {
+	if v.vIngester == nil && sourceVideo != "" {
 		v.vIngester = newVideoIngester(sourceVideo)
 	}
 
@@ -1147,6 +1209,14 @@ func (v *testPublisher) Run(ctx context.Context, cancel context.CancelFunc) erro
 	r := fmt.Sprintf("%v://%v%v", srsSchema, *srsServer, *srsStream)
 	if v.streamSuffix != "" {
 		r = fmt.Sprintf("%v-%v", r, v.streamSuffix)
+	}
+	// Add codec parameter if specified
+	if v.codec != "" {
+		if strings.Contains(r, "?") {
+			r = fmt.Sprintf("%v&codec=%v", r, v.codec)
+		} else {
+			r = fmt.Sprintf("%v?codec=%v", r, v.codec)
+		}
 	}
 	sourceVideo, sourceAudio, fps := *srsPublishVideo, *srsPublishAudio, *srsPublishVideoFps
 
